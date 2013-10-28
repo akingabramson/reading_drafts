@@ -1,8 +1,8 @@
-function route(handleMatcher, pathname, response) {
+function route(handleMatcher, pathname, response, postData) {
 	console.log("About to route a request for " + pathname);
 
 	if (typeof handleMatcher[pathname] === 'function') {
-		return handleMatcher[pathname](response);
+		handleMatcher[pathname](response, postData);
 	} else {
 		console.log("404 not found");
 		response.writeHead(404, {"Content-Type": "text/plain"});

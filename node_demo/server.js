@@ -7,7 +7,7 @@ function start(route, handle) {
 	function onReq(request, response) {
 		reqCount += 1;
 		var pathname = url.parse(request.url).pathname;
-		route(handle, pathname, response);
+		route(handle, pathname, response, request);
 	}
 
 	http.createServer(onReq).listen(8888);

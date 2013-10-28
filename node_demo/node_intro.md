@@ -134,7 +134,7 @@ function route(handleMatcher, pathname, response) {
 	console.log("About to route a request for " + pathname);
 
 	if (typeof handleMatcher[pathname] === 'function') {
-		return handleMatcher[pathname](response);
+		handleMatcher[pathname](response);
 	} else {
 		console.log("404 not found");
 		response.writeHead(404, {"Content-Type": "text/plain"});
@@ -144,5 +144,143 @@ function route(handleMatcher, pathname, response) {
 }
 
 exports.route = route;
+```
+
+## Post Requests
+
+Time to handle different types of requests.  Let's change our start function to show a form where a user can type in text:
+
+```javascript
+//request_handlers.js
+function start(response) {
+	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" content="text/html; '+ 'charset=UTF-8" />'+ '</head>'+ '<body>'+ '<form action="/upload" method="post">'+ '<textarea name="text" rows="20" cols="60"></textarea>'+ '<input type="submit" value="Submit text" />'+ '</form>'+ '</body>'+ '</html>'; //normally we'll render this with a template
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(body);
+	response.end();
+}
+```
+
+This form will submit a POST request to /upload.  POST data is uploaded in chunks to avoid blocking the server.  Imagine a huge file that takes forever for the server to process--we'd rather have it come piece-by-piece so that we can continue to serve requests.
+
+
+There are three parts to this:
+
+1. We set a standard encoding for the request.
+2. We use a closure to add each chunk to a postData variable.
+3. Once all the data has finished coming in, we send the full
+postData into our request handler.
+
+```javascript
+//server.js
+//...
+
+function onReq(request, response) {
+	var postData = ""; //we'll be adding to this later
+	var pathname = url.parse(request.url).pathname;
+	
+	request.setEncoding("utf8"); // 1. Set encoding.
+
+	request.addListener("data", function(postDataChunk) {
+		postData += postDataChunk; // 2. Adding to it now
+		console.log("received chunk" + postDataChunk);
+	});
+
+	request.addListener("end", function(){
+		route(handle, pathname, response, postData); // 3. postData complete.  Send it on.
+	});
+}
+//...
+
+//request_handlers.js
+var querystring = require("querystring");
+//querystring.parse will parse the utf-8 text
+//...
+
+function upload(response, postData) {
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(querystring.parse(postData).text); //querystring.parse converts back from
+																										//utf-8
+	response.end();
+}
+
+//...
+```
+
+Test it out!  Use this [lorem][http://www.lipsum.com/] generator
+to make 500 bytes of text and upload it through the form on your
+`/start` page.  Then do the same thing with 78000 bytes of text.
+You should see the chunk handler fire at least twice.
+
+## File Uploads
+
+We're going a module called 'node-formidable' to parse incoming file data.  Formidable will put the uploaded file in a /tmp folder on our hard drive.  We'll use a module called 'fs' to
+read the contents of that file into our node server.
+
+In terminal, run `npm install formidable` --it doesn't come standard with node.
+
+Now we'll add a request handler to show an image.
+
+```javascript
+//request_handlers.js
+//...
+var fs = require("fs");
+
+//...
+function show(response) {
+	fs.readFile("tmp/test.jpg", "binary", function(error, file){
+		if (error) {
+			response.writeHead(500, {"Content-Type": "text/plain"}); 
+			response.write(error + "\n");
+			response.end();
+		} else {
+			response.writeHead(200, {"Content-Type": "image/jpg"});
+			response.write(file, "binary");
+			response.end();
+		}
+	})
+}
+
+exports.show = show;
+//...
+
+//index.js
+//...
+handle["/show"] = requestHandlers.show;
+```
+
+Let's change our HTML form to accept multipart data (normally 
+we'll have an entire separate template file for html, but this
+is for demonstration purposes).
+
+```javascript
+//request_handlers.js
+//...
+
+function start(response, postData) {
+	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
+		'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
+		'<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
+		'<input type="file" name="upload">'+ 
+		'<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
+	
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(body);
+	response.end();
+}
+```
+
+To handle the file upload in our upload request handler,
+we'll have to pass in the request object from the server
+(right now we only have the response).  Let's refactor our code:
+
+```javascript
+//server.js
+//...
+function onReq(request, response) {
+		var pathname = url.parse(request.url).pathname;
+		route(handle, pathname, response, request); // 3. postData complete.  Send it on.
+	}
+
+	http.createServer(onReq).listen(8888);
 ```
 
