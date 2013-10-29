@@ -53,14 +53,19 @@ var server = require("./server");
 server.start();
 ```
 
-Try visiting localhost:8888 again--it should still work.  By using `require("./server")`, we're pulling in the server file's exports and setting them to a variable called `server`.  
+Try visiting localhost:8888 again--it should still work.  By 
+using `require("./server")`, we're pulling in the server file's 
+exports and setting them to a variable called `server`.  
 
-Fool around by setting global variables in the the server file and accessing them in the index file.
+Fool around by setting global variables in the the server file 
+and accessing them in the index file.
 
 ## Routing
 
-Remember Rails lite?  In the same way that we made a router object that takes in a path and runs the matching controller action, we're going to eventually make a function that takes in the
-path and keeps track of request handlers to route a request to the appropriate "action".
+Remember Rails lite?  In the same way that we made a router object
+that takes in a path and runs the matching controller action, we're 
+going to eventually make a function that takes in the path and keeps
+track of request handlers to route a request to the appropriate "action".
 
 First, let's write some request handlers (our "actions").
 
@@ -103,8 +108,10 @@ a huge file from the hard drive).
 
 Just like in jQuery (e.g. with `.on("click", function(){})`), we
 want to pass exec a *callback* that will run once the
-information that we want is returned.  Without this callback, node would wait for the information to come back before *any* other method runs.  Instead, we put the callback in the event loop and node can continue running and serving other requests.
-
+information that we want is returned.  Without this callback, node 
+would wait for the information to come back before *any* other 
+method runs.  Instead, we put the callback in the event loop and 
+node can continue running and serving other requests.
 
 
 We'll match paths to these request handler functions (start and upload) our index file.
@@ -123,9 +130,14 @@ handle["/upload"] = requestHandlers.upload;
 server.start(router.route, handle);
 ```
 
-Notice that we're not passing the entire router into the server.Just the route function and the handle object.  It may also make sense to have written the handle object directly in the route function, but it's easier to test this way.  See the [dependency-injection][dependency-injection] reading.
+Notice that we're not passing the entire router into the 
+server.Just the route function and the handle object.  
+It may also make sense to have written the handle object 
+directly in the route function, but it's easier to test 
+this way.  See the [dependency-injection][dependency-injection] reading.
 
-Now, in the server, we pass the handle hash and the response to our route function (look familiar?).
+Now, in the server, we pass the handle hash and the response to our route 
+function (look familiar?).
 
 ```javascript
 //server.js
@@ -157,7 +169,8 @@ exports.route = route;
 
 ## Post Requests
 
-Time to handle different types of requests.  Let's change our start function to show a form where a user can type in text:
+Time to handle different types of requests.  Let's change our start 
+function to show a form where a user can type in text:
 
 ```javascript
 //request_handlers.js
