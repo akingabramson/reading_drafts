@@ -28,12 +28,17 @@ http.createServer(function(request, response){
 console.log("Server Started");
 ```
 
-Look familiar?  We did something similar with WEBrick in Rails Lite.  Our anonymous function runs code in the same way that .mount_proc runs code when a request comes in.
+Look familiar?  We did something similar with WEBrick in Rails Lite.  
+Our anonymous function runs code in the same way that .mount_proc 
+runs code when a request comes in.
 
 Run `node server.js` and go to localhost:8888 in your browser.
 
-What's going on? Node is asynchronous, i.e., it says "make a server, and when a request comes in, we'll run this *callback*".
-We can prove that node is running asynchronously because "Server Started" gets logged before any requests come in.
+What's going on? Node is asynchronous, i.e., it says 
+"make a server, and when a request comes in, we'll run 
+this *callback*". We can prove that node is running 
+asynchronously because "Server Started" gets logged 
+before any requests come in.
 
 
 ## The Index File
@@ -70,8 +75,8 @@ function start(response) {
 	
 
 	exec("ls -lah", // this could be any "blocking operation"
-									// that is, an operation that takes a while
-									// to return that would ordinarily stop the // server
+			// that is, an operation that takes a while
+			// to return that would ordinarily stop the // server
 
 	 	function(err, stdout, stderr){
 			response.writeHead(200, {"Content-Type": "text/html"});
@@ -90,7 +95,11 @@ exports.start = start;
 exports.upload = upload;
 ```
 
-What's this `exec`[exec][exec] thing we're using?  Speaking literally, it's a node function that lets you run terminal commands.  But we could easily run a different function that also takes a long time to return (e.g. running a really long sql query or reading a huge file from the hard drive).
+What's this [`exec`][exec] thing we're using?  Speaking literally, 
+it's a node function that lets you run terminal commands.  
+But we could easily run a different function that also takes a 
+long time to return (e.g. running a really long sql query or reading
+a huge file from the hard drive).
 
 Just like in jQuery (e.g. with `.on("click", function(){})`), we
 want to pass exec a *callback* that will run once the
