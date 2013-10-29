@@ -1,9 +1,11 @@
 var querystring = require("querystring");
 var fs = require("fs");
+var formidable = require("formidable");
+
 //querystring.parse will parse the utf-8 text
 
 
-function start(response, postData) {
+function start(response) {
 	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
 		'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
 		'<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
@@ -15,10 +17,22 @@ function start(response, postData) {
 	response.end();
 }
 
-function upload(response, postData) {
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write(querystring.parse(postData).text); 
-	response.end();
+function upload(response, request) {
+	var form = new formidable.IncomingForm();
+	form.parse(request, function(error, fields, files){
+
+		fs.rename(files.upload.path, "tmp/test.jpg", function(error){
+			console.log(files.upload.path);
+			if(error) {
+				fs.unlink("/tmp/test.jpg");
+				fs.rename(files.upload.path, "tmp/test.jpg");
+			}
+			response.writeHead(200, {"Content-Type": "text/html"});
+			response.write("received image:<br/>"); 
+			response.write("<img src='/show' />");
+			response.end();
+		});
+	});
 }
 
 function show(response) {

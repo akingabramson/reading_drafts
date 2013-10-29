@@ -278,9 +278,79 @@ we'll have to pass in the request object from the server
 //...
 function onReq(request, response) {
 		var pathname = url.parse(request.url).pathname;
-		route(handle, pathname, response, request); // 3. postData complete.  Send it on.
+		route(handle, pathname, response, request);
 	}
 
 	http.createServer(onReq).listen(8888);
 ```
 
+```javascript
+//router.js
+//...
+
+function route(handleMatcher, pathname, response, request) {
+	console.log("About to route a request for " + pathname);
+
+	if (typeof handleMatcher[pathname] === 'function') {
+		handleMatcher[pathname](response, request);
+```
+
+```javascript
+//request_handlers.js
+var querystring = require("querystring");
+var fs = require("fs");
+var formidable = require("formidable");
+
+//querystring.parse will parse the utf-8 text
+
+
+function start(response) {
+	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
+		'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
+		'<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
+		'<input type="file" name="upload">'+ 
+		'<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
+
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(body);
+	response.end();
+}
+
+function upload(response, request) {
+	var form = new formidable.IncomingForm();
+	form.parse(request, function(error, fields, files){
+
+		fs.rename(files.upload.path, "tmp/test.jpg", function(error){
+			console.log(files.upload.path);
+			if(error) {
+				fs.unlink("/tmp/test.jpg");
+				fs.rename(files.upload.path, "tmp/test.jpg");
+			}
+			response.writeHead(200, {"Content-Type": "text/html"});
+			response.write("received image:<br/>"); 
+			response.write("<img src='/show' />");
+			response.end();
+		});
+	});
+}
+
+function show(response) {
+	fs.readFile("tmp/test.jpg", "binary", function(error, file){
+		if (error) {
+			response.writeHead(500, {"Content-Type": "text/plain"}); 
+			response.write(error + "\n");
+			response.end();
+		} else {
+			response.writeHead(200, {"Content-Type": "image/jpg"});
+			response.write(file, "binary");
+			response.end();
+		}
+	})
+}
+
+exports.start = start;
+exports.upload = upload;
+exports.show = show;
+```
+
+Try it out!  You don't have to know the details of fs, but make sure you see how we use callbacks to fill the response asynchronously.
