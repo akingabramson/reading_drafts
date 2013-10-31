@@ -20,9 +20,9 @@ Write the following code:
 var http = require("http");
 
 http.createServer(function(request, response){
-	response.writeHead(200, {"Content-Type": "text/plain"});
-	response.write("Hello World");
-	response.end();
+    response.writeHead(200, {"Content-Type": "text/plain"});
+    response.write("Hello World");
+    response.end();
 }).listen(8888);
 
 console.log("Server Started");
@@ -40,10 +40,9 @@ this *callback*". We can prove that node is running
 asynchronously because "Server Started" gets logged 
 before any requests come in.
 
-
 ## The Index File
 
-Time to start building our main file, *index.js*.
+Time to start building our main file, *index.js*.  
 
 ```javascript
 //index.js
@@ -51,6 +50,24 @@ Time to start building our main file, *index.js*.
 var server = require("./server");
 
 server.start();
+```
+
+We are also going to wrap our server code in a function 
+called `start`, which we are calling in the `index.js` file:
+
+```javascript
+//server.js
+var http = require("http");
+
+function start() {
+  http.createServer(function(request, response){
+    response.writeHead(200, {"Content-Type": "text/plain"});
+    response.write("Hello World");
+    response.end();
+  }).listen(8888);
+
+  console.log("Server Started");
+}
 ```
 
 Try visiting localhost:8888 again--it should still work.  By 
