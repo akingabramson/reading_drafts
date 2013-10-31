@@ -3,6 +3,8 @@ CHANGES FROM FLARNIE:
 - added code snippet showing how you wrap the server code in a function `start`
 - TODO item about maybe renaming handlers
 - Add context to code sample for using router inside server `start` function
+- Add note about updating the `route` function to take `postData` and pass it on to the handler
+once uploading is implemented.
 
 # Node.js
 
@@ -166,14 +168,24 @@ this way.  See the [dependency-injection][dependency-injection] reading.
 Now, in the server, we pass the handle hash and the response to our route 
 function (look familiar?).
 
-```javascript
-//server.js
-var url = require('url');
-function start(route, handle) {
-  http.createServer(function (request, response) {
+  function onReq(request, response) {
     var pathname = url.parse(request.url).pathname;
     route(handle, pathname, response, request);
-  }).listen(8888);
+  }
+
+    http.createServer(onReq).listen(8888);
+
+```javascript
+//server.js
+var http = require('http');
+var url = require('url');
+
+function start(route, handle) {
+  function onReq(request, response) {
+    var pathname = url.parse(request.url).pathname;
+    route(handle, pathname, response, request);
+  }
+  http.createServer(onReq(request, response)).listen(8888);
   console.log("Server Started");
 }
 
@@ -230,13 +242,9 @@ There are three parts to this:
 3. Once all the data has finished coming in, we send the full
 postData into our request handler.
 
-**TODO**: How to make it clear where the onReq function is written?
-Is it inside of the `start` function?  It must be, because it closes over
-`route` and `handler`...
-
 ```javascript
 //server.js
-//...
+//...inside the `start` function
 
 function onReq(request, response) {
   var postData = ""; //we'll be adding to this later
@@ -270,7 +278,7 @@ function upload(response, postData) {
 //...
 ```
 
-Adjust the `route` function in `router.js` to dake the postData as well as the other arguments,
+Adjust the `route` function in `router.js` to take the postData as well as the other arguments,
 in order to pass it to the `upload` handler along with the response.
 
 Test it out!  Use this [lorem][http://www.lipsum.com/] generator
@@ -280,7 +288,8 @@ You should see the chunk handler fire at least twice.
 
 ## File Uploads
 
-We're going a module called 'node-formidable' to parse incoming file data.  Formidable will put the uploaded file in a /tmp folder on our hard drive.  We'll use a module called 'fs' to
+We're going to use a module called 'node-formidable' to parse incoming file data.  
+Formidable will put the uploaded file in a /tmp folder on our hard drive.  We'll use a module called 'fs' to
 read the contents of that file into our node server.
 
 In terminal, run `npm install formidable` --it doesn't come standard with node.
@@ -342,7 +351,7 @@ we'll have to pass in the request object from the server
 
 ```javascript
 //server.js
-//...
+//...inside the `start` function
   function onReq(request, response) {
     var pathname = url.parse(request.url).pathname;
     route(handle, pathname, response, request);
