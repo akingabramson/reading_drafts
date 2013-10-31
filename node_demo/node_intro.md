@@ -1,3 +1,9 @@
+CHANGES FROM FLARNIE:
+- changed tabs to spaces
+- added code snippet showing how you wrap the server code in a function `start`
+- TODO item about maybe renaming handlers
+- Add context to code sample for using router inside server `start` function
+
 # Node.js
 
 Install Node [here][node-installation].  You'll probably want 
@@ -100,11 +106,11 @@ function start(response) {
                   // that is, an operation that takes a while
                   // to return that would ordinarily stop the // server
 
-                  function(err, stdout, stderr){
-                    response.writeHead(200, {"Content-Type": "text/html"});
-                    response.write(stdout);
-                    response.end();
-                  });
+       function(err, stdout, stderr){
+         response.writeHead(200, {"Content-Type": "text/html"});
+         response.write(stdout);
+         response.end();
+       });
 }
 
 function upload(response) {
@@ -162,13 +168,16 @@ function (look familiar?).
 
 ```javascript
 //server.js
-//...
-  function onReq(request, response) {
+var url = require('url');
+function start(handle, pathname) {
+  http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
     route(handle, pathname, response, request);
-  }
+  }).listen(8888);
+  console.log("Server Started");
+}
 
-//...
+exports.start = start;
 ```
 
 
