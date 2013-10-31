@@ -68,11 +68,12 @@ called `start`, which we are calling in the `index.js` file:
 var http = require("http");
 
 function start() {
-  http.createServer(function(request, response){
+  function onReq(request, response){
     response.writeHead(200, {"Content-Type": "text/plain"});
     response.write("Hello World");
     response.end();
-  }).listen(8888);
+  }
+  http.createServer(onReq(request, response)).listen(8888);
 
   console.log("Server Started");
 }
