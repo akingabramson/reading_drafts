@@ -169,7 +169,7 @@ function (look familiar?).
 ```javascript
 //server.js
 var url = require('url');
-function start(handle, pathname) {
+function start(route, handle) {
   http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
     route(handle, pathname, response, request);
@@ -199,6 +199,9 @@ function route(handleMatcher, pathname, response) {
 
 exports.route = route;
 ```
+
+When you run the node.js server and visit the root page, you should see the text returned 
+by the command `ls -lah`.
 
 ## Post Requests
 
