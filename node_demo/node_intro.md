@@ -92,31 +92,34 @@ First, let's write some request handlers (our "actions").
 var exec = require("child_process").exec;
 
 function start(response) {
-	console.log("Request handler 'start' was called.");
-	var content = "empty";
+  console.log("Request handler 'start' was called.");
+  var content = "empty";
 	
 
-	exec("ls -lah", // this could be any "blocking operation"
-			// that is, an operation that takes a while
-			// to return that would ordinarily stop the // server
+  exec("ls -lah", // this could be any "blocking operation"
+                  // that is, an operation that takes a while
+                  // to return that would ordinarily stop the // server
 
-	 	function(err, stdout, stderr){
-			response.writeHead(200, {"Content-Type": "text/html"});
-			response.write(stdout);
-			response.end();
-		});
+                  function(err, stdout, stderr){
+                    response.writeHead(200, {"Content-Type": "text/html"});
+                    response.write(stdout);
+                    response.end();
+                  });
 }
 
 function upload(response) {
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write("in upload");
-	response.end();
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write("in upload");
+  response.end();
 }
 
 exports.start = start;
 exports.upload = upload;
 ```
-
+**TODO:** Should the handler be named `start` when the server code also
+ is `start` ?
+ 
+ 
 What's this [`exec`][exec] thing we're using?  Speaking literally, 
 it's a node function that lets you run terminal commands.  
 But we could easily run a different function that also takes a 
@@ -131,7 +134,8 @@ method runs.  Instead, we put the callback in the event loop and
 node can continue running and serving other requests.
 
 
-We'll match paths to these request handler functions (start and upload) our index file.
+We'll match paths to these request handler functions (start and upload) 
+our index file.
 
 ```javascript
 //index.js
@@ -159,10 +163,10 @@ function (look familiar?).
 ```javascript
 //server.js
 //...
-	function onReq(request, response) {
-		var pathname = url.parse(request.url).pathname;
-		route(handle, pathname, response, request);
-	}
+  function onReq(request, response) {
+    var pathname = url.parse(request.url).pathname;
+    route(handle, pathname, response, request);
+  }
 
 //...
 ```
@@ -172,16 +176,16 @@ function (look familiar?).
 //router.js
 
 function route(handleMatcher, pathname, response) {
-	console.log("About to route a request for " + pathname);
+  console.log("About to route a request for " + pathname);
 
-	if (typeof handleMatcher[pathname] === 'function') {
-		handleMatcher[pathname](response);
-	} else {
-		console.log("404 not found");
-		response.writeHead(404, {"Content-Type": "text/plain"});
-		response.write("Content not found");
-		response.end();
-	}
+  if (typeof handleMatcher[pathname] === 'function') {
+    handleMatcher[pathname](response);
+  } else {
+    console.log("404 not found");
+    response.writeHead(404, {"Content-Type": "text/plain"});
+    response.write("Content not found");
+    response.end();
+  }
 }
 
 exports.route = route;
@@ -195,10 +199,10 @@ function to show a form where a user can type in text:
 ```javascript
 //request_handlers.js
 function start(response) {
-	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" content="text/html; '+ 'charset=UTF-8" />'+ '</head>'+ '<body>'+ '<form action="/upload" method="post">'+ '<textarea name="text" rows="20" cols="60"></textarea>'+ '<input type="submit" value="Submit text" />'+ '</form>'+ '</body>'+ '</html>'; //normally we'll render this with a template
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write(body);
-	response.end();
+  var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" content="text/html; '+ 'charset=UTF-8" />'+ '</head>'+ '<body>'+ '<form action="/upload" method="post">'+ '<textarea name="text" rows="20" cols="60"></textarea>'+ '<input type="submit" value="Submit text" />'+ '</form>'+ '</body>'+ '</html>'; //normally we'll render this with a template
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write(body);
+  response.end();
 }
 ```
 
@@ -217,19 +221,19 @@ postData into our request handler.
 //...
 
 function onReq(request, response) {
-	var postData = ""; //we'll be adding to this later
-	var pathname = url.parse(request.url).pathname;
+  var postData = ""; //we'll be adding to this later
+  var pathname = url.parse(request.url).pathname;
 	
-	request.setEncoding("utf8"); // 1. Set encoding.
+  request.setEncoding("utf8"); // 1. Set encoding.
 
-	request.addListener("data", function(postDataChunk) {
-		postData += postDataChunk; // 2. Adding to it now
-		console.log("received chunk" + postDataChunk);
-	});
+  request.addListener("data", function(postDataChunk) {
+  postData += postDataChunk; // 2. Adding to it now
+  console.log("received chunk" + postDataChunk);
+  });
 
-	request.addListener("end", function(){
-		route(handle, pathname, response, postData); // 3. postData complete.  Send it on.
-	});
+  request.addListener("end", function(){
+    route(handle, pathname, response, postData); // 3. postData complete.  Send it on.
+  });
 }
 //...
 
@@ -239,10 +243,10 @@ var querystring = require("querystring");
 //...
 
 function upload(response, postData) {
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write(querystring.parse(postData).text); //querystring.parse converts back from
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write(querystring.parse(postData).text); //querystring.parse converts back from
 																										//utf-8
-	response.end();
+  response.end();
 }
 
 //...
@@ -269,17 +273,17 @@ var fs = require("fs");
 
 //...
 function show(response) {
-	fs.readFile("tmp/test.jpg", "binary", function(error, file){
-		if (error) {
-			response.writeHead(500, {"Content-Type": "text/plain"}); 
-			response.write(error + "\n");
-			response.end();
-		} else {
-			response.writeHead(200, {"Content-Type": "image/jpg"});
-			response.write(file, "binary");
-			response.end();
-		}
-	})
+  fs.readFile("tmp/test.jpg", "binary", function(error, file){
+    if (error) {
+      response.writeHead(500, {"Content-Type": "text/plain"}); 
+      response.write(error + "\n");
+      response.end();
+    } else {
+      response.writeHead(200, {"Content-Type": "image/jpg"});
+      response.write(file, "binary");
+      response.end();
+    }
+  })
 }
 
 exports.show = show;
@@ -299,15 +303,15 @@ is for demonstration purposes).
 //...
 
 function start(response, postData) {
-	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
-		'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
-		'<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
-		'<input type="file" name="upload">'+ 
-		'<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
-	
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write(body);
-	response.end();
+  var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
+             'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
+             '<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
+             '<input type="file" name="upload">'+ 
+             '<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
+             
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write(body);
+  response.end();
 }
 ```
 
@@ -318,12 +322,12 @@ we'll have to pass in the request object from the server
 ```javascript
 //server.js
 //...
-function onReq(request, response) {
-		var pathname = url.parse(request.url).pathname;
-		route(handle, pathname, response, request);
-	}
+  function onReq(request, response) {
+    var pathname = url.parse(request.url).pathname;
+    route(handle, pathname, response, request);
+  }
 
-	http.createServer(onReq).listen(8888);
+    http.createServer(onReq).listen(8888);
 ```
 
 ```javascript
@@ -331,10 +335,10 @@ function onReq(request, response) {
 //...
 
 function route(handleMatcher, pathname, response, request) {
-	console.log("About to route a request for " + pathname);
+  console.log("About to route a request for " + pathname);
 
-	if (typeof handleMatcher[pathname] === 'function') {
-		handleMatcher[pathname](response, request);
+  if (typeof handleMatcher[pathname] === 'function') {
+    handleMatcher[pathname](response, request);
 ```
 
 ```javascript
@@ -347,47 +351,47 @@ var formidable = require("formidable");
 
 
 function start(response) {
-	var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
-		'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
-		'<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
-		'<input type="file" name="upload">'+ 
-		'<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
+  var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
+    'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
+    '<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
+    '<input type="file" name="upload">'+ 
+    '<input type="submit" value="Upload file" />'+ '</form>'+ '</body>'+ '</html>';
 
-	response.writeHead(200, {"Content-Type": "text/html"});
-	response.write(body);
-	response.end();
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write(body);
+  response.end();
 }
 
 function upload(response, request) {
-	var form = new formidable.IncomingForm();
-	form.parse(request, function(error, fields, files){
+  var form = new formidable.IncomingForm();
+  form.parse(request, function(error, fields, files){
 
-		fs.rename(files.upload.path, "tmp/test.jpg", function(error){
-			console.log(files.upload.path);
-			if(error) {
-				fs.unlink("/tmp/test.jpg");
-				fs.rename(files.upload.path, "tmp/test.jpg");
-			}
-			response.writeHead(200, {"Content-Type": "text/html"});
-			response.write("received image:<br/>"); 
-			response.write("<img src='/show' />");
-			response.end();
-		});
-	});
+  fs.rename(files.upload.path, "tmp/test.jpg", function(error){
+  console.log(files.upload.path);
+  if(error) {
+    fs.unlink("/tmp/test.jpg");
+    fs.rename(files.upload.path, "tmp/test.jpg");
+  }
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write("received image:<br/>"); 
+      response.write("<img src='/show' />");
+      response.end();
+    });
+  });
 }
 
 function show(response) {
-	fs.readFile("tmp/test.jpg", "binary", function(error, file){
-		if (error) {
-			response.writeHead(500, {"Content-Type": "text/plain"}); 
-			response.write(error + "\n");
-			response.end();
-		} else {
-			response.writeHead(200, {"Content-Type": "image/jpg"});
-			response.write(file, "binary");
-			response.end();
-		}
-	})
+  fs.readFile("tmp/test.jpg", "binary", function(error, file){
+    if (error) {
+      response.writeHead(500, {"Content-Type": "text/plain"}); 
+      response.write(error + "\n");
+      response.end();
+    } else {
+      response.writeHead(200, {"Content-Type": "image/jpg"});
+      response.write(file, "binary");
+      response.end();
+    }
+  })
 }
 
 exports.start = start;
@@ -395,4 +399,5 @@ exports.upload = upload;
 exports.show = show;
 ```
 
-Try it out!  You don't have to know the details of fs, but make sure you see how we use callbacks to fill the response asynchronously.
+Try it out!  You don't have to know the details of fs, but make sure you see how we use 
+callbacks to fill the response asynchronously.
