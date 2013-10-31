@@ -218,7 +218,9 @@ function start(response) {
 }
 ```
 
-This form will submit a POST request to /upload.  POST data is uploaded in chunks to avoid blocking the server.  Imagine a huge file that takes forever for the server to process--we'd rather have it come piece-by-piece so that we can continue to serve requests.
+This form will submit a POST request to /upload.  POST data is uploaded in chunks to avoid blocking the server.  
+Imagine a huge file that takes forever for the server to process--we'd rather have it come piece-by-piece 
+so that we can continue to serve requests.
 
 
 There are three parts to this:
@@ -227,6 +229,10 @@ There are three parts to this:
 2. We use a closure to add each chunk to a postData variable.
 3. Once all the data has finished coming in, we send the full
 postData into our request handler.
+
+**TODO**: How to make it clear where the onReq function is written?
+Is it inside of the `start` function?  It must be, because it closes over
+`route` and `handler`...
 
 ```javascript
 //server.js
@@ -263,6 +269,9 @@ function upload(response, postData) {
 
 //...
 ```
+
+Adjust the `route` function in `router.js` to dake the postData as well as the other arguments,
+in order to pass it to the `upload` handler along with the response.
 
 Test it out!  Use this [lorem][http://www.lipsum.com/] generator
 to make 500 bytes of text and upload it through the form on your
