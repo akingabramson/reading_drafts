@@ -1,11 +1,3 @@
-CHANGES FROM FLARNIE:
-- changed tabs to spaces
-- added code snippet showing how you wrap the server code in a function `start`
-- TODO item about maybe renaming handlers
-- Add context to code sample for using router inside server `start` function
-- Add note about updating the `route` function to take `postData` and pass it on to the handler
-once uploading is implemented.
-
 # Node.js
 
 Install Node [here][node-installation].  You'll probably want 
@@ -60,8 +52,8 @@ var server = require("./server");
 server.start();
 ```
 
-We are also going to wrap our server code in a function 
-called `start`, which we are calling in the `index.js` file:
+Wrap the server code in a function 
+called `start`, is now being called in the `index.js` file:
 
 ```javascript
 //server.js
@@ -77,6 +69,8 @@ function start() {
 
   console.log("Server Started");
 }
+
+exports.start = start;
 ```
 
 Try visiting localhost:8888 again--it should still work.  By 
@@ -100,7 +94,7 @@ First, let's write some request handlers (our "actions").
 
 var exec = require("child_process").exec;
 
-function start(response) {
+function root(response) {
   console.log("Request handler 'start' was called.");
   var content = "empty";
 	
@@ -122,12 +116,9 @@ function upload(response) {
   response.end();
 }
 
-exports.start = start;
+exports.root = root;
 exports.upload = upload;
 ```
-**TODO:** Should the handler be named `start` when the server code also
- is `start` ?
- 
  
 What's this [`exec`][exec] thing we're using?  Speaking literally, 
 it's a node function that lets you run terminal commands.  
@@ -143,7 +134,7 @@ method runs.  Instead, we put the callback in the event loop and
 node can continue running and serving other requests.
 
 
-We'll match paths to these request handler functions (start and upload) 
+We'll match paths to these request handler functions (root and upload) 
 our index file.
 
 ```javascript
@@ -153,8 +144,8 @@ var requestHandlers = require("./request_handlers");
 
 var handle = {};
 
-handle["/"] = requestHandlers.start;
-handle["/start"] = requestHandlers.start;
+handle["/"] = requestHandlers.root;
+handle["/root"] = requestHandlers.root;
 handle["/upload"] = requestHandlers.upload;
 
 server.start(router.route, handle);
@@ -168,13 +159,6 @@ this way.  See the [dependency-injection][dependency-injection] reading.
 
 Now, in the server, we pass the handle hash and the response to our route 
 function (look familiar?).
-
-  function onReq(request, response) {
-    var pathname = url.parse(request.url).pathname;
-    route(handle, pathname, response, request);
-  }
-
-    http.createServer(onReq).listen(8888);
 
 ```javascript
 //server.js
@@ -218,12 +202,12 @@ by the command `ls -lah`.
 
 ## Post Requests
 
-Time to handle different types of requests.  Let's change our start 
+Time to handle different types of requests.  Let's change our root 
 function to show a form where a user can type in text:
 
 ```javascript
 //request_handlers.js
-function start(response) {
+function root(response) {
   var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" content="text/html; '+ 'charset=UTF-8" />'+ '</head>'+ '<body>'+ '<form action="/upload" method="post">'+ '<textarea name="text" rows="20" cols="60"></textarea>'+ '<input type="submit" value="Submit text" />'+ '</form>'+ '</body>'+ '</html>'; //normally we'll render this with a template
   response.writeHead(200, {"Content-Type": "text/html"});
   response.write(body);
@@ -285,7 +269,7 @@ in order to pass it to the `upload` handler along with the response.
 Test it out!  Use this [lorem][http://www.lipsum.com/] generator
 to make 500 bytes of text and upload it through the form on your
 `/start` page.  Then do the same thing with 78000 bytes of text.
-You should see the chunk handler fire at least twice.
+You should see the chunk handler fire at least twice in your server log.
 
 ## File Uploads
 
@@ -333,7 +317,7 @@ is for demonstration purposes).
 //request_handlers.js
 //...
 
-function start(response, postData) {
+function root(response, postData) {
   var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
              'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
              '<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
@@ -381,7 +365,7 @@ var formidable = require("formidable");
 //querystring.parse will parse the utf-8 text
 
 
-function start(response) {
+function root(response) {
   var body = '<html>'+ '<head>'+ '<meta http-equiv="Content-Type" '+ 
     'content="text/html; charset=UTF-8" />'+ '</head>'+ '<body>'+ 
     '<form action="/upload" enctype="multipart/form-data" '+ 'method="post">'+ 
@@ -425,7 +409,7 @@ function show(response) {
   })
 }
 
-exports.start = start;
+exports.root = root;
 exports.upload = upload;
 exports.show = show;
 ```
